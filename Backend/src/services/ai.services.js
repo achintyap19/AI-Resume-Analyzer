@@ -26,7 +26,10 @@ const interviewReportSchema = z.object({
         day: z.number(),
         focus: z.string(),
         tasks: z.array(z.string())
-    }))
+    })),
+    strengths: z.array(z.string()),
+
+    weaknesses: z.array(z.string()),
 })
 
 // Define a clean, native Gemini Type declaration. 
@@ -92,34 +95,54 @@ const geminiResponseSchema = {
                 },
                 required: ["day", "focus", "tasks"]
             }
-        }
+        },
+        strengths: {
+            type: Type.ARRAY,
+            description: "List of key strengths of the candidate relevant to the job",
+            items: {
+                type: Type.STRING
+            }
+        },
+
+        weaknesses: {
+            type: Type.ARRAY,
+            description: "List of weaknesses or improvement areas of the candidate",
+            items: {
+                type: Type.STRING
+            }
+        },
     },
-    required: ["matchScore", "technicalQuestions", "behaviouralQuestions", "skillGaps", "preparationPlan"]
+    required: ["matchScore", "technicalQuestions", "behaviouralQuestions", "skillGaps", "preparationPlan","strengths","weaknesses"]
 }
 
-async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+async function generateInterviewReportAI({ resume, selfDescription, jobDescription }) {
 
     const prompt = `
-Generate an interview report for a candidate applying for a Software Engineer role based on the inputs provided below.
+        Generate an interview report for a candidate applying for a Software Engineer role based on the inputs provided below.
 
-Candidate Resume:
-${resume || "Not provided"}
+        Candidate Resume:
+        ${resume || "Not provided"}
 
-Candidate Self Description:
-${selfDescription || "Not provided"}
+        Candidate Self Description:
+        ${selfDescription || "Not provided"}
 
-Target Job Description:
-${jobDescription || "Not provided"}
+        Target Job Description:
+        ${jobDescription || "Not provided"}
 
-Ensure the JSON matching the schema contains:
-- matchScore
-- 2 technical questions
-- 1 behavioural question
-- 2 skill gaps
-- 3 day preparation plan
-`
+        Ensure the JSON matching the schema contains:
+        - matchScore
+        - 2 technical questions
+        - 1 behavioural question
+        - 2 skill gaps
+        - 3 day preparation plan
+        - 3-5 strengths
+        - 3-5 weaknesses
+        Strengths should highlight skills, experiences, and qualities that align well with the role.
 
-    try {
+        Weaknesses should identify realistic areas for improvement based on the candidate profile and job requirements.
+        `
+
+   
         const response = await ai.models.generateContent({
             model: 'gemini-3.5-flash',
             contents: prompt,
@@ -129,20 +152,17 @@ Ensure the JSON matching the schema contains:
             }
         })
 
-        // Clean any possible string formatting artifacts and parse safely
+        
         const rawText = response.text.trim()
         const parsedJson = JSON.parse(rawText)
 
-        // Validate using Zod to enforce strict runtime checks
+       
         const report = interviewReportSchema.parse(parsedJson)   
 
         console.log("Success! Validated Interview Report Object:", JSON.stringify(report, null, 2))
         return report
 
-    } catch (error) {
-        console.error("Execution failed inside generation block:", error)
-        throw error
-    }
+    
 }
 
-module.exports = generateInterviewReport
+module.exports = generateInterviewReportAI
