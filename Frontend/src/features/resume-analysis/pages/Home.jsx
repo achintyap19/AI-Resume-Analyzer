@@ -1,31 +1,62 @@
-import { useState } from "react";
-import {
-  Upload,
-  FileText,
-  Sparkles,
-  Brain,
-  Target,
-} from "lucide-react";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {Upload,FileText,Sparkles,Brain,Target,} from "lucide-react";
+import {useReport} from '../hooks/useReport'
+
 
 const Home = () => {
+
+  const navigate = useNavigate()
+
+  const {generateReport, loading} = useReport()
+
+  const resumeInputRef = useRef(null);
   const [resume, setResume] = useState(null);
   const [selfDescription, setSelfDescription] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => { //FUNCTION FOR API CALL
     e.preventDefault();
-    setResume('')
-    setSelfDescription('')
-    setJobDescription('')
 
+    const resumeFile = resumeInputRef.current.files[0]
 
-    console.log({
-      resume,
-      selfDescription,
-      jobDescription,
-    });
+    if (!resumeFile) {
+        alert("Please upload your resume.");
+        return;
+    }
+    if (!selfDescription.trim()) {
+        alert("Please enter your self description.");
+        return;
+    }
+    if (!jobDescription.trim()) {
+        alert("Please enter the job description.");
+        return;
+    }
 
-    // API Call Here
+    try{  //API CALL
+      const report = await generateReport({
+        resumeFile,
+        selfDescription,
+        jobDescription
+      })
+      setResume(null)
+
+      if (resumeInputRef.current) {
+        resumeInputRef.current.value = "";
+      }
+      setSelfDescription('')
+      setJobDescription('')
+
+      navigate(`/reports/${report._id}`)
+      }catch(error){
+        console.log(error)
+        alert(
+          error.response?.data?.message ||
+          "Something went wrong while generating the report."
+        );
+    }
+
+    
   };
 
   return (
@@ -102,6 +133,7 @@ const Home = () => {
               </p>
 
               <input
+                ref={resumeInputRef}
                 type="file"
                 accept=".pdf"
                 className="hidden"
@@ -150,6 +182,7 @@ const Home = () => {
           <div className="flex justify-center">
             <button
               type="submit"
+              disabled={loading}
               className="
                 bg-white
                 text-black
@@ -157,13 +190,43 @@ const Home = () => {
                 py-4
                 rounded-2xl
                 font-semibold
-                hover:scale-105
                 transition-all
                 duration-300
                 shadow-lg
+                hover:scale-105
+                disabled:opacity-60
+                disabled:cursor-not-allowed
+                disabled:hover:scale-100
               "
             >
-              Analyze Resume
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+
+                  <span>Generating Report...</span>
+                </div>
+              ) : (
+                "Analyze Resume"
+              )}
             </button>
           </div>
         </form>

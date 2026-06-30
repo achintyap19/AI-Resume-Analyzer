@@ -30,6 +30,7 @@ const interviewReportSchema = z.object({
     strengths: z.array(z.string()),
 
     weaknesses: z.array(z.string()),
+    title: z.string()
 })
 
 // Define a clean, native Gemini Type declaration. 
@@ -111,8 +112,12 @@ const geminiResponseSchema = {
                 type: Type.STRING
             }
         },
+        title: {
+            type: Type.STRING,
+            description: "The job title or role being analyzed, for example 'Software Engineer Intern', 'Backend Developer', or 'Machine Learning Engineer', The title field should contain the job role being analyzed."
+        }
     },
-    required: ["matchScore", "technicalQuestions", "behaviouralQuestions", "skillGaps", "preparationPlan","strengths","weaknesses"]
+    required: ["title", "matchScore", "technicalQuestions", "behaviouralQuestions", "skillGaps", "preparationPlan","strengths","weaknesses"]
 }
 
 async function generateInterviewReportAI({ resume, selfDescription, jobDescription }) {
@@ -137,6 +142,7 @@ async function generateInterviewReportAI({ resume, selfDescription, jobDescripti
         - 3 day preparation plan
         - 3-5 strengths
         - 3-5 weaknesses
+        - title (professional job role inferred from the job description)
         Strengths should highlight skills, experiences, and qualities that align well with the role.
 
         Weaknesses should identify realistic areas for improvement based on the candidate profile and job requirements.
