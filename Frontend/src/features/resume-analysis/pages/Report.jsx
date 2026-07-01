@@ -96,7 +96,7 @@ function Report() {
 
         {/* Technical Questions */}
 
-        <section className="bg-white rounded-3xl shadow p-6">
+        <section className="bg-white rounded-xl shadow p-6">
 
           <h2 className="text-2xl font-bold mb-6">
             Technical Questions

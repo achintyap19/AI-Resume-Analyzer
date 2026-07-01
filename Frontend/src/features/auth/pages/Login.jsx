@@ -17,7 +17,7 @@ function Login() {
   const formHandler= async(e)=>{
     e.preventDefault()
     await handleLogin({email, password})
-    navigate('/')
+    navigate('/dashboard')
     setEmail('')
     setPassword('')
   }
